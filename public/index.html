@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C++ Code Compiler</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs/editor/editor.main.css">
+    <link rel="stylesheet" href="styles.css">
+   
+    <style>
+        
+        
+    </style>
+</head>
+<body>
+    <div class="mega_container" id="particles-js">
+    <div class="container">
+        <div class="left_box">
+            </div>
+        <div class="inner_container">
+        <h2 class="top_text">C++ COMPILER WITH CODE AUTO COMPLETE</h2>
+        <div class="button_div">
+            <div class="bt_1">
+    <button id="run" class="bton">Run</button>
+    </div>
+    <div class="bt_1">
+        <button id="Optimise" class="bton">Optimise</button>
+        </div>
+        <div class="bt_1">
+            <button id="Save" class="bton">Save</button>
+            </div>
+    </div>
+    <div class="code_area">
+    <div id="editor" class="text_area"></div>
+    </div>
+    
+    </div>
+    <div class="right_box">
+        <div class="right_text">
+        <h2 class="top_text">CRAFTED BY ANSIL</h2>
+        </div>
+        <div class="right_box_up">
+            <div class="button_div_right">
+                <div class="bt_1">
+        <button id="Import" class="bton">Import</button>
+        </div>
+        <div class="bt_1">
+        
+            </div>
+            <div class="bt_1">
+                <button id="Copy" class="bton" onclick="copyCode()">Copy</button>
+                </div>
+        </div>
+            <div class="chat_box" id="answer_box">
+                <pre><code id="optimized_code"></code></pre>
+            </div>
+            <div class="chat_box_2" id="question_box">
+            
+            </div>
+        </div>
+        <div class="right_box_middle">
+            <div class="top_div_out">
+            OUTPUT
+            </div>
+        </div>
+        <div class="right_box_down">
+            <pre id="output"></pre>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+<script src="particles-config.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs/loader.js"></script>
+    <script>
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs' }});
+        require(['vs/editor/editor.main'], function() {
+
+            
+
+
+            const editor = monaco.editor.create(document.getElementById('editor'), {
+                value: '#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}',
+                language: 'cpp',
+                theme: 'vs-dark' // Set to Visual Studio Dark theme
+            });
+            
+         // Import button functionality
+         document.getElementById("Import").onclick = function() {
+            const code = editor.getValue(); // Get code from Monaco Editor
+            console.log("Import button clicked. Code:", code); // Log the code being sent
+
+            // Send the code to the Groq API
+            fetch('/import', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code: code })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Response from /import:", data); // Log the response from the backend
+                // Display the optimized code in the answer_box
+                document.getElementById("optimized_code").textContent = data.optimizedCode;
+            })
+            .catch(error => {
+                console.error("Error importing code:", error);
+            });
+        };
+
+       
+
+            document.getElementById("run").onclick = function() {
+                const code = editor.getValue(); // Get code from Monaco Editor
+                const to_compile = {
+                    program: code,
+                    input: "" // You can add input here if needed
+                };
+
+                fetch('/compile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(to_compile)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("output").textContent = "Output: " + data.output + "\nErrors: " + data.error;
+                })
+                .catch(error => {
+                    document.getElementById("output").textContent = "Error: Compilation failed.";
+                });
+            };
+        });
+
+        function copyCode() {
+    const optimizedCode = document.getElementById("optimized_code").textContent;
+    navigator.clipboard.writeText(optimizedCode)
+        .then(() => {
+            console.log("Code copied to clipboard!");
+        })
+        .catch((error) => {
+            console.error("Failed to copy code:", error);
+        });
+}
+    </script>
+</body>
+</html>
